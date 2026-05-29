@@ -183,6 +183,7 @@ export default function Home() {
   const [audioError, setAudioError] = useState("");
   const [savedAudios, setSavedAudios] = useState([]); // áudios já gerados, pra reusar
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [motionPrompt, setMotionPrompt] = useState("");
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -549,23 +550,15 @@ export default function Home() {
             </div>
           )}
 
-          {/* Galeria de imagens já geradas — clique pra reutilizar */}
+          {/* Imagens já geradas — abre modal pra reutilizar */}
           {savedImages.length > 0 && (
-            <div className="mt-5 pt-4 border-t border-glass-border">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-2">
-                Imagens salvas (clique pra reutilizar)
-              </p>
-              <div className="flex gap-2 flex-wrap">
-                {savedImages.map((img) => (
-                  <button
-                    key={img.id}
-                    onClick={() => setComposeImage(img.url)}
-                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${composeImage === img.url ? "border-primary-500" : "border-glass-border hover:border-primary-500/40"}`}
-                  >
-                    <img src={proxiedSrc(img.url)} className="w-full h-full object-cover" alt="" />
-                  </button>
-                ))}
-              </div>
+            <div className="mt-4">
+              <button
+                onClick={() => setIsImageModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-glass-bg border border-glass-border text-foreground rounded-lg text-xs font-bold hover:border-primary-500/40 transition-all"
+              >
+                <FiFolder /> Escolher imagem salva
+              </button>
             </div>
           )}
         </Section>
@@ -814,6 +807,55 @@ export default function Home() {
                         {isSel ? "Selecionado" : "Selecionar"}
                       </button>
                     </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de imagens salvas */}
+      <AnimatePresence>
+        {isImageModalOpen && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsImageModalOpen(false)}
+              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-2xl max-h-[80vh] flex flex-col bg-white rounded-xl shadow-2xl"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <FiImage className="text-primary-500" />
+                  <h3 className="text-sm font-black text-slate-900">Imagens salvas</h3>
+                </div>
+                <button
+                  onClick={() => setIsImageModalOpen(false)}
+                  className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500"
+                >
+                  <FiX />
+                </button>
+              </div>
+              <div className="p-5 overflow-y-auto custom-scrollbar grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {savedImages.map((img) => {
+                  const isSel = composeImage === img.url;
+                  return (
+                    <button
+                      key={img.id}
+                      onClick={() => { setComposeImage(img.url); setIsImageModalOpen(false); }}
+                      className={`relative aspect-[3/4] rounded-lg overflow-hidden border-2 transition-all ${isSel ? "border-primary-500 ring-1 ring-primary-500" : "border-slate-200 hover:border-slate-400"}`}
+                    >
+                      <img src={proxiedSrc(img.url)} className="w-full h-full object-cover" alt="" />
+                      {isSel && (
+                        <span className="absolute bottom-1 right-1 bg-primary-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                          Selecionada
+                        </span>
+                      )}
+                    </button>
                   );
                 })}
               </div>
