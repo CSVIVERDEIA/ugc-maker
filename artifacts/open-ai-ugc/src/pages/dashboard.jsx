@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [creations, setCreations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCreation, setSelectedCreation] = useState(null);
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -44,6 +45,28 @@ export default function Dashboard() {
 
   if (status === "loading") return null;
   if (!session) return null;
+
+  const typeOf = (item) =>
+    item.type === "audio" ? "audio" : item.type === "image" ? "image" : "video";
+
+  const counts = creations.reduce(
+    (acc, item) => {
+      acc.all += 1;
+      acc[typeOf(item)] += 1;
+      return acc;
+    },
+    { all: 0, video: 0, image: 0, audio: 0 }
+  );
+
+  const FILTERS = [
+    { key: "all", label: "Todas", icon: FiBarChart2 },
+    { key: "video", label: "Vídeos", icon: FiVideo },
+    { key: "image", label: "Imagens", icon: FiImage },
+    { key: "audio", label: "Áudios", icon: FiMic },
+  ];
+
+  const filteredCreations =
+    filter === "all" ? creations : creations.filter((item) => typeOf(item) === filter);
 
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-12">
@@ -73,6 +96,36 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {!isLoading && creations.length > 0 && (
+        <div className="max-w-7xl mx-auto mb-8 flex flex-wrap gap-2">
+          {FILTERS.map((f) => {
+            const Icon = f.icon;
+            const active = filter === f.key;
+            return (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border transition-all ${
+                  active
+                    ? "bg-primary-500 text-white border-primary-500 shadow-sm"
+                    : "bg-glass-bg text-foreground border-glass-border hover:border-primary-500/40"
+                }`}
+              >
+                <Icon className="text-sm" />
+                {f.label}
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                    active ? "bg-white/20" : "bg-glass-hover text-muted"
+                  }`}
+                >
+                  {counts[f.key]}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         {isLoading ? (
           <div className="py-32 flex flex-col items-center justify-center gap-4">
@@ -91,10 +144,17 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
+        ) : filteredCreations.length === 0 ? (
+          <div className="py-32 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-16 h-16 rounded bg-glass-bg border border-glass-border flex items-center justify-center">
+              <FiInfo className="text-2xl text-muted" />
+            </div>
+            <p className="text-sm font-medium text-muted">Nenhuma criação deste tipo ainda.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <AnimatePresence>
-              {creations.map((item, index) => (
+              {filteredCreations.map((item, index) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 20 }}
