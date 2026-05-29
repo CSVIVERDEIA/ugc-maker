@@ -23,14 +23,14 @@
   --muted: #475569;
   --solid-bg: #ffffff;
 
-  /* Default Theme (Indigo) */
-  --primary-50: #f5f3ff;
-  --primary-100: #ede9fe;
-  --primary-200: #ddd6fe;
-  --primary-300: #c4b5fd;
-  --primary-400: #a78bfa;
-  --primary-500: #6366f1;
-  --primary-600: #4f46e5;
+  /* Default Theme (VIA Navy Blue) */
+  --primary-50: #eef2f8;
+  --primary-100: #d3dded;
+  --primary-200: #a7bad9;
+  --primary-300: #6a86b5;
+  --primary-400: #345584;
+  --primary-500: #1b3a5f;
+  --primary-600: #0d1d33;
   --secondary-500: #ec4899;
 
   --glass-bg: rgba(255, 255, 255, 0.7);

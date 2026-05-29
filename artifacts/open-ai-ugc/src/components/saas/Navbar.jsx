@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { FaUser, FaSignOutAlt, FaChevronDown, FaRocket, FaBars, FaTimes } from "react-icons/fa";
+import { FaUser, FaSignOutAlt, FaChevronDown, FaBars, FaTimes } from "react-icons/fa";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LoginButton } from "./AuthButtons";
+import logoUrl from "@assets/VIA_app_icon_1780089502703.png";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -27,9 +28,11 @@ export function Navbar() {
     <nav className="h-20 flex-shrink-0 border-b border-glass-border bg-glass-bg backdrop-blur-3xl sticky top-0 z-[100] px-4 md:px-12 flex items-center justify-between">
       {/* Logo Section */}
       <Link href="/" className="flex items-center gap-3 group">
-        <div className="w-10 h-10 rounded-xl bg-primary-500 flex items-center justify-center shadow-lg shadow-primary-500/20 group-hover:scale-110 transition-transform">
-          <FaRocket className="text-white text-lg" />
-        </div>
+        <img
+          src={logoUrl}
+          alt="VIA"
+          className="w-10 h-10 rounded-xl shadow-lg shadow-primary-500/20 group-hover:scale-110 transition-transform"
+        />
         <div className="flex flex-col leading-none">
           <span className="font-black text-xl tracking-tighter uppercase text-foreground">
             Open AI UGC
