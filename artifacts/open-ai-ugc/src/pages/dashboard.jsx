@@ -254,14 +254,35 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                <div className="pt-12">
+                <div className="pt-12 space-y-3">
+                  {selectedCreation.status === "completed" &&
+                    (selectedCreation.type === "image" || selectedCreation.type === "audio") && (
+                      <button
+                        onClick={() => {
+                          sessionStorage.setItem(
+                            "ugc:useCreation",
+                            JSON.stringify({
+                              id: selectedCreation.id,
+                              type: selectedCreation.type,
+                              url: selectedCreation.url,
+                              prompt: selectedCreation.prompt || "",
+                              duration: selectedCreation.duration || 0,
+                            })
+                          );
+                          router.push("/");
+                        }}
+                        className="w-full py-4 bg-primary-500 text-white rounded-full font-bold text-xs flex items-center justify-center gap-3 transition-all hover:bg-primary-600 active:scale-[0.98] shadow-xl shadow-primary-500/20"
+                      >
+                        <FiArrowRight size={14} /> Usar no gerador
+                      </button>
+                    )}
                   {selectedCreation.url && (
                     <a
                       href={selectedCreation.url}
                       download
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full py-4 bg-primary-500 text-white rounded-full font-bold text-xs flex items-center justify-center gap-3 transition-all hover:bg-primary-600 active:scale-[0.98] shadow-xl shadow-primary-500/20"
+                      className="w-full py-4 bg-glass-bg border border-glass-border text-foreground rounded-full font-bold text-xs flex items-center justify-center gap-3 transition-all hover:bg-glass-hover active:scale-[0.98]"
                     >
                       <FiDownload size={14} /> Download Asset
                     </a>

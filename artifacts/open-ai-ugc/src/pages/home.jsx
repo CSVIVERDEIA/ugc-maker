@@ -18,6 +18,8 @@ import {
   FiEdit3,
   FiImage,
   FiMic,
+  FiFolder,
+  FiPlay,
 } from "react-icons/fi";
 import { proxiedSrc } from "@/lib/utils";
 
@@ -179,6 +181,8 @@ export default function Home() {
   const [selectedAudioDuration, setSelectedAudioDuration] = useState(0); // segundos da voz escolhida
   const [audioLoading, setAudioLoading] = useState(false);
   const [audioError, setAudioError] = useState("");
+  const [savedAudios, setSavedAudios] = useState([]); // áudios já gerados, pra reusar
+  const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
   const [motionPrompt, setMotionPrompt] = useState("");
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -217,6 +221,26 @@ export default function Home() {
 
       const im = await fetch("/api/creations?type=image");
       if (im.ok) setSavedImages(await im.json());
+
+      const au = await fetch("/api/creations?type=audio");
+      if (au.ok) setSavedAudios((await au.json()).filter((a) => a.status === "completed" && a.url));
+
+      // seleção vinda de "Minhas Criações" (clique pra usar no gerador)
+      try {
+        const raw = sessionStorage.getItem("ugc:useCreation");
+        if (raw) {
+          sessionStorage.removeItem("ugc:useCreation");
+          const c = JSON.parse(raw);
+          if (c.type === "image" && c.url) {
+            setComposeImage(c.url);
+            setSavedImages((prev) =>
+              prev.some((x) => x.url === c.url) ? prev : [{ id: c.id, url: c.url }, ...prev]
+            );
+          } else if (c.type === "audio" && c.url) {
+            await useSavedAudio(c);
+          }
+        }
+      } catch {}
     })();
   }, [status]);
 
@@ -314,6 +338,21 @@ export default function Home() {
     } finally {
       setAudioLoading(false);
     }
+  };
+
+  // reaproveita um áudio já gerado (de "Minhas Criações" ou do modal de áudios salvos)
+  const useSavedAudio = async (c) => {
+    if (!c?.url) return;
+    let duration = Number(c.duration) || 0;
+    if (!duration) duration = await getAudioDuration(c.url);
+    const label = c.prompt
+      ? `Salvo · ${Math.round(duration)}s · ${c.prompt.slice(0, 40)}`
+      : `Áudio salvo · ${Math.round(duration)}s`;
+    setAudios((prev) =>
+      prev.some((x) => x.audio === c.url) ? prev : [{ id: c.id, audio: c.url, label, duration }, ...prev]
+    );
+    setSelectedAudio(c.url);
+    setSelectedAudioDuration(duration);
   };
 
   const reshapeScriptFn = async () => {
@@ -595,14 +634,24 @@ export default function Home() {
                   <VoiceSlider label="Estilo" value={voiceSettings.style} onChange={(v) => setVoiceSettings((s) => ({ ...s, style: v }))} />
                   <VoiceSlider label="Velocidade" value={voiceSettings.speed} min={0.7} max={1.2} step={0.05} onChange={(v) => setVoiceSettings((s) => ({ ...s, speed: v }))} />
                 </div>
-                <button
-                  onClick={generateVoice}
-                  disabled={audioLoading || !prompt.trim()}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg text-xs font-bold hover:bg-primary-600 transition-all disabled:opacity-50"
-                >
-                  {audioLoading ? <FiLoader className="animate-spin" /> : <FiMic />}
-                  {audios.length ? "Gerar mais uma voz" : "Gerar voz (ouvir antes)"}
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={generateVoice}
+                    disabled={audioLoading || !prompt.trim()}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg text-xs font-bold hover:bg-primary-600 transition-all disabled:opacity-50"
+                  >
+                    {audioLoading ? <FiLoader className="animate-spin" /> : <FiMic />}
+                    {audios.length ? "Gerar mais uma voz" : "Gerar voz (ouvir antes)"}
+                  </button>
+                  {savedAudios.length > 0 && (
+                    <button
+                      onClick={() => setIsAudioModalOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-glass-bg border border-glass-border text-foreground rounded-lg text-xs font-bold hover:border-primary-500/40 transition-all"
+                    >
+                      <FiFolder /> Escolher áudio salvo
+                    </button>
+                  )}
+                </div>
                 {audioError && <p className="text-[11px] text-rose-500">{audioError}</p>}
 
                 {audios.length > 0 && (
@@ -708,6 +757,65 @@ export default function Home() {
                     <p className="text-[10px] text-slate-400 mt-1">{Object.keys(model.params).join(" • ")}</p>
                   </div>
                 ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de áudios salvos */}
+      <AnimatePresence>
+        {isAudioModalOpen && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsAudioModalOpen(false)}
+              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-2xl max-h-[80vh] flex flex-col bg-white rounded-xl shadow-2xl"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <FiMic className="text-primary-500" />
+                  <h3 className="text-sm font-black text-slate-900">Áudios salvos</h3>
+                </div>
+                <button
+                  onClick={() => setIsAudioModalOpen(false)}
+                  className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500"
+                >
+                  <FiX />
+                </button>
+              </div>
+              <div className="p-5 overflow-y-auto custom-scrollbar grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {savedAudios.map((a) => {
+                  const isSel = selectedAudio === a.url;
+                  return (
+                    <div
+                      key={a.id}
+                      className={`p-3 rounded-lg border transition-all ${isSel ? "border-primary-500 ring-1 ring-primary-500 bg-primary-50" : "border-slate-200 hover:border-slate-400"}`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <FiPlay className="text-primary-500 text-xs flex-shrink-0" />
+                        <p className="text-xs font-bold text-slate-900 truncate">
+                          {a.prompt ? a.prompt.split(" ").slice(0, 5).join(" ") : "Áudio"}
+                          {a.duration ? ` · ${Math.round(a.duration)}s` : ""}
+                        </p>
+                      </div>
+                      <p className="text-[10px] text-slate-400 line-clamp-2 mb-2 min-h-[26px]">
+                        {a.prompt || "Sem descrição"}
+                      </p>
+                      <audio controls src={a.url} className="w-full h-8 mb-2" />
+                      <button
+                        onClick={async () => { await useSavedAudio(a); setIsAudioModalOpen(false); }}
+                        className={`w-full py-1.5 rounded-lg text-[11px] font-bold transition-all ${isSel ? "bg-primary-500 text-white" : "bg-slate-900 text-white hover:bg-slate-700"}`}
+                      >
+                        {isSel ? "Selecionado" : "Selecionar"}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
           </div>
