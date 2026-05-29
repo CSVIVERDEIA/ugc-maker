@@ -43,16 +43,29 @@ const ALLOWED_ATTRS = {
 };
 const ALLOWED_ASPECT = ["3:4", "1:1", "9:16"];
 
-// Mantém só os valores válidos (whitelist). Lança erro se vier algo fora da lista.
+// Valores conhecidos passam direto; valores personalizados (texto livre) são
+// aceitos depois de limpos e limitados em tamanho, pra suportar a opção "Personalizado".
+function sanitizeCustom(value) {
+  if (typeof value !== "string") return "";
+  return value
+    .replace(/[\r\n]+/g, " ")
+    .replace(/[<>{}]/g, "")
+    .trim()
+    .slice(0, 80);
+}
+
 function sanitizeAttributes(raw = {}) {
   const clean = {};
-  for (const [key, allowed] of Object.entries(ALLOWED_ATTRS)) {
+  for (const key of Object.keys(ALLOWED_ATTRS)) {
     const value = raw[key];
     if (value == null || value === "") continue;
-    if (!allowed.includes(value)) {
-      throw new Error(`Valor inválido para "${key}"`);
+    const allowed = ALLOWED_ATTRS[key];
+    if (allowed.includes(value)) {
+      clean[key] = value;
+    } else {
+      const custom = sanitizeCustom(value);
+      if (custom) clean[key] = custom;
     }
-    clean[key] = value;
   }
   return clean;
 }

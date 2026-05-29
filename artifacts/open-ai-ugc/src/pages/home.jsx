@@ -242,6 +242,7 @@ export default function Home() {
   // composição da imagem (avatar + produto via nano-banana)
   const [scenePrompt, setScenePrompt] = useState("");
   const [sceneStyle, setSceneStyle] = useState({}); // escolhas guiadas (boas práticas de prompt)
+  const [sceneCustom, setSceneCustom] = useState({}); // {key: true} quando o campo está em modo "Personalizado"
   const [composeImage, setComposeImage] = useState(null);
   const [composeLoading, setComposeLoading] = useState(false);
   const [composeError, setComposeError] = useState("");
@@ -653,15 +654,20 @@ export default function Home() {
           </p>
 
           <div className="space-y-4 mb-4">
-            {SCENE_GUIDE.map((group) => (
+            {SCENE_GUIDE.map((group) => {
+              const custom = sceneCustom[group.key];
+              return (
               <div key={group.key}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-muted">
                     {group.label}
                   </span>
-                  {sceneStyle[group.key] && (
+                  {(sceneStyle[group.key] || custom) && (
                     <button
-                      onClick={() => setSceneStyle((p) => ({ ...p, [group.key]: undefined }))}
+                      onClick={() => {
+                        setSceneStyle((p) => ({ ...p, [group.key]: undefined }));
+                        setSceneCustom((p) => ({ ...p, [group.key]: false }));
+                      }}
                       className="text-[10px] font-bold text-muted hover:text-foreground transition-colors"
                     >
                       limpar
@@ -670,13 +676,14 @@ export default function Home() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {group.options.map((opt) => {
-                    const active = sceneStyle[group.key] === opt;
+                    const active = !custom && sceneStyle[group.key] === opt;
                     return (
                       <button
                         key={opt}
-                        onClick={() =>
-                          setSceneStyle((p) => ({ ...p, [group.key]: active ? undefined : opt }))
-                        }
+                        onClick={() => {
+                          setSceneCustom((p) => ({ ...p, [group.key]: false }));
+                          setSceneStyle((p) => ({ ...p, [group.key]: active ? undefined : opt }));
+                        }}
                         className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
                           active
                             ? "bg-primary-500 text-white border-primary-500 shadow-sm"
@@ -687,9 +694,32 @@ export default function Home() {
                       </button>
                     );
                   })}
+                  <button
+                    onClick={() => {
+                      setSceneCustom((p) => ({ ...p, [group.key]: !custom }));
+                      setSceneStyle((p) => ({ ...p, [group.key]: undefined }));
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
+                      custom
+                        ? "bg-primary-500 text-white border-primary-500 shadow-sm"
+                        : "bg-glass-bg text-foreground border-glass-border hover:border-primary-500/40"
+                    }`}
+                  >
+                    + Personalizado
+                  </button>
                 </div>
+                {custom && (
+                  <input
+                    autoFocus
+                    value={sceneStyle[group.key] || ""}
+                    onChange={(e) => setSceneStyle((p) => ({ ...p, [group.key]: e.target.value }))}
+                    placeholder={`Descreva ${group.label.toLowerCase()}...`}
+                    className="mt-2 w-full px-3 py-2 bg-glass-bg border border-glass-border rounded-lg text-xs text-foreground placeholder-muted outline-none focus:border-primary-500/50"
+                  />
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mb-3">

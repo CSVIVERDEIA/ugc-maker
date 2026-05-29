@@ -22,9 +22,26 @@ async function toDataUri(url) {
 
 // Transforma as escolhas guiadas (rótulos em PT do front) numa direção de cena
 // rica, seguindo boas práticas de prompt para fotografia de produto.
+// Limpa cada campo da cena: aceita só string, remove caracteres de controle e
+// limita o tamanho (os campos podem vir de uma opção "Personalizado" de texto livre).
+function cleanField(value, max = 80) {
+  if (typeof value !== "string") return "";
+  return value
+    .replace(/[\r\n]+/g, " ")
+    .replace(/[<>{}]/g, "")
+    .trim()
+    .slice(0, max);
+}
+
 function buildSceneDirection(scene = {}) {
   if (!scene || typeof scene !== "object") return "";
-  const { shot, setting, lighting, background, mood, angle, details } = scene;
+  const shot = cleanField(scene.shot);
+  const setting = cleanField(scene.setting);
+  const lighting = cleanField(scene.lighting);
+  const background = cleanField(scene.background);
+  const mood = cleanField(scene.mood);
+  const angle = cleanField(scene.angle);
+  const details = cleanField(scene.details, 300);
   return [
     shot && `Enquadramento: ${shot}.`,
     angle && `Ângulo da câmera: ${angle}.`,

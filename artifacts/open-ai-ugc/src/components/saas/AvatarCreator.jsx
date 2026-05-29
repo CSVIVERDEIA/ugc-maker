@@ -136,6 +136,8 @@ function personaFromAttrs(a) {
 export function AvatarCreator({ onCancel, onCreated }) {
   const [step, setStep] = useState(0);
   const [attrs, setAttrs] = useState({});
+  const [customKeys, setCustomKeys] = useState({}); // {fieldKey: true} quando o campo está em modo "Personalizado"
+  const [voiceCustom, setVoiceCustom] = useState(false);
   const [name, setName] = useState("");
   const [voice, setVoice] = useState("");
 
@@ -150,12 +152,22 @@ export function AvatarCreator({ onCancel, onCreated }) {
   const isFinal = step === STEPS.length;
   const current = STEPS[step];
 
-  const setAttr = (key, value) =>
+  const selectPreset = (key, value) => {
+    setCustomKeys((p) => ({ ...p, [key]: false }));
     setAttrs((p) => ({ ...p, [key]: p[key] === value ? "" : value }));
+  };
+
+  const toggleCustom = (key) => {
+    setCustomKeys((p) => ({ ...p, [key]: !p[key] }));
+    setAttrs((p) => ({ ...p, [key]: "" }));
+  };
 
   // todo passo exige que os campos obrigatórios estejam preenchidos
   const stepComplete =
-    isFinal || current.fields.every((f) => f.optional || attrs[f.key]);
+    isFinal ||
+    current.fields.every(
+      (f) => f.optional || String(attrs[f.key] ?? "").trim().length > 0,
+    );
 
   const next = () => {
     if (!stepComplete) return;
@@ -280,13 +292,25 @@ export function AvatarCreator({ onCancel, onCreated }) {
                       {f.options.map((opt) => (
                         <Chip
                           key={opt}
-                          active={attrs[f.key] === opt}
-                          onClick={() => setAttr(f.key, opt)}
+                          active={!customKeys[f.key] && attrs[f.key] === opt}
+                          onClick={() => selectPreset(f.key, opt)}
                         >
                           {opt}
                         </Chip>
                       ))}
+                      <Chip active={!!customKeys[f.key]} onClick={() => toggleCustom(f.key)}>
+                        + Personalizado
+                      </Chip>
                     </div>
+                    {customKeys[f.key] && (
+                      <input
+                        autoFocus
+                        value={attrs[f.key] || ""}
+                        onChange={(e) => setAttrs((p) => ({ ...p, [f.key]: e.target.value }))}
+                        placeholder={`Descreva ${f.label.toLowerCase()}...`}
+                        className="mt-2.5 w-full px-3 py-2 bg-glass-bg border border-glass-border rounded-lg text-xs text-foreground placeholder-muted outline-none focus:border-primary-500/50"
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -326,11 +350,30 @@ export function AvatarCreator({ onCancel, onCreated }) {
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {VOICE_OPTIONS.map((v) => (
-                        <Chip key={v} active={voice === v} onClick={() => setVoice(voice === v ? "" : v)}>
+                        <Chip
+                          key={v}
+                          active={!voiceCustom && voice === v}
+                          onClick={() => { setVoiceCustom(false); setVoice(voice === v ? "" : v); }}
+                        >
                           {v}
                         </Chip>
                       ))}
+                      <Chip
+                        active={voiceCustom}
+                        onClick={() => { setVoiceCustom((c) => !c); setVoice(""); }}
+                      >
+                        + Personalizado
+                      </Chip>
                     </div>
+                    {voiceCustom && (
+                      <input
+                        autoFocus
+                        value={voice}
+                        onChange={(e) => setVoice(e.target.value)}
+                        placeholder="Descreva o tom de voz..."
+                        className="mt-2.5 w-full px-3 py-2 bg-glass-bg border border-glass-border rounded-lg text-xs text-foreground placeholder-muted outline-none focus:border-primary-500/50"
+                      />
+                    )}
                   </div>
 
                   <button
