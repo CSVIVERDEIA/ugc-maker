@@ -529,14 +529,24 @@ export default function Home() {
             placeholder="Direção opcional da cena (ex: na cozinha, segurando perto do rosto, sorrindo)"
             className="w-full px-3 py-2 bg-glass-bg border border-glass-border rounded-lg text-xs text-foreground placeholder-muted outline-none focus:border-primary-500/50 mb-3"
           />
-          <button
-            onClick={composeImageFn}
-            disabled={composeLoading || (!avatarId && !productId)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg text-xs font-bold hover:bg-primary-600 transition-all disabled:opacity-50"
-          >
-            {composeLoading ? <FiLoader className="animate-spin" /> : <FiImage />}
-            {composeImage ? "Gerar outra imagem" : "Criar imagem com IA"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={composeImageFn}
+              disabled={composeLoading || (!avatarId && !productId)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg text-xs font-bold hover:bg-primary-600 transition-all disabled:opacity-50"
+            >
+              {composeLoading ? <FiLoader className="animate-spin" /> : <FiImage />}
+              {composeImage ? "Gerar outra imagem" : "Criar imagem com IA"}
+            </button>
+            {savedImages.length > 0 && (
+              <button
+                onClick={() => setIsImageModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-glass-bg border border-glass-border text-foreground rounded-lg text-xs font-bold hover:border-primary-500/40 transition-all"
+              >
+                <FiFolder /> Escolher imagem salva
+              </button>
+            )}
+          </div>
           {composeError && <p className="text-[11px] text-rose-500 mt-2">{composeError}</p>}
 
           {composeImage && (
@@ -547,18 +557,6 @@ export default function Home() {
                 alt="Imagem composta"
               />
               <p className="text-[10px] text-muted mt-1">É essa imagem que será animada no vídeo.</p>
-            </div>
-          )}
-
-          {/* Imagens já geradas — abre modal pra reutilizar */}
-          {savedImages.length > 0 && (
-            <div className="mt-4">
-              <button
-                onClick={() => setIsImageModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-glass-bg border border-glass-border text-foreground rounded-lg text-xs font-bold hover:border-primary-500/40 transition-all"
-              >
-                <FiFolder /> Escolher imagem salva
-              </button>
             </div>
           )}
         </Section>
