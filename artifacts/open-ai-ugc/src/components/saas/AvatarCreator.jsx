@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiArrowLeft,
@@ -144,6 +144,8 @@ export function AvatarCreator({ onCancel, onCreated }) {
   const [genError, setGenError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const previewRef = useRef(null);
+
   const TOTAL = STEPS.length + 1; // passos + tela final de geração
   const isFinal = step === STEPS.length;
   const current = STEPS[step];
@@ -164,6 +166,9 @@ export function AvatarCreator({ onCancel, onCreated }) {
   const generate = async () => {
     setGenerating(true);
     setGenError("");
+    requestAnimationFrame(() => {
+      previewRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
     try {
       const res = await fetch("/api/avatars/generate-portrait", {
         method: "POST",
@@ -339,7 +344,10 @@ export function AvatarCreator({ onCancel, onCreated }) {
                 </div>
 
                 {/* preview */}
-                <div className="aspect-[3/4] rounded-xl border border-glass-border bg-glass-bg overflow-hidden flex items-center justify-center">
+                <div
+                  ref={previewRef}
+                  className="aspect-[3/4] rounded-xl border border-glass-border bg-glass-bg overflow-hidden flex items-center justify-center"
+                >
                   {generating ? (
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
