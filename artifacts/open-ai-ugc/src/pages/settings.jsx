@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { FiLoader, FiKey, FiCheck, FiSave } from "react-icons/fi";
+import { FiLoader, FiKey, FiCheck, FiSave, FiRefreshCw } from "react-icons/fi";
+import { triggerOnboarding } from "@/lib/onboarding";
 
 const FIELDS = [
   {
@@ -150,6 +151,24 @@ export default function SettingsPage() {
             <p className="text-[10px] text-muted">
               Dica: deixe um campo em branco pra manter o valor atual. Pra remover uma chave, apague o conteúdo e salve.
             </p>
+
+            <div className="border-t border-glass-border pt-6 mt-2">
+              <h2 className="text-[11px] font-black uppercase tracking-widest text-foreground mb-1.5">
+                Onboarding
+              </h2>
+              <p className="text-[11px] text-muted mb-3">
+                Quer revisar a configuração inicial? Reinicie o assistente passo a passo.
+              </p>
+              <button
+                onClick={() => {
+                  triggerOnboarding();
+                  router.push("/");
+                }}
+                className="flex items-center gap-2 px-5 py-2.5 bg-glass-bg border border-glass-border text-foreground rounded-full text-xs font-bold hover:border-primary-500/40 transition-all"
+              >
+                <FiRefreshCw /> Reiniciar onboarding
+              </button>
+            </div>
           </div>
         )}
       </div>

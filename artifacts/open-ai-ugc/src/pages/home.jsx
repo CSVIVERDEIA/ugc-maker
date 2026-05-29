@@ -22,6 +22,8 @@ import {
   FiPlay,
 } from "react-icons/fi";
 import { proxiedSrc } from "@/lib/utils";
+import { OnboardingWizard } from "@/components/saas/OnboardingWizard";
+import { consumeOnboardingTrigger } from "@/lib/onboarding";
 
 // 4 modelos do Replicate (params controlam só a UI; os campos reais de input
 // ficam em api/generate/route.js → buildInput).
@@ -189,6 +191,15 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastGeneration, setLastGeneration] = useState(null); // o que está aberto no preview
   const [jobs, setJobs] = useState([]); // gerações acompanhadas (continuam mesmo se fechar)
+
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // abre o wizard de configuração inicial (primeiro cadastro ou "reiniciar onboarding")
+  useEffect(() => {
+    if (status === "authenticated" && consumeOnboardingTrigger()) {
+      setShowOnboarding(true);
+    }
+  }, [status]);
 
   const isTalking = pipeline !== "video";
 
@@ -467,6 +478,7 @@ export default function Home() {
 
   return (
     <div className="flex-1 overflow-y-auto">
+      <OnboardingWizard open={showOnboarding} onClose={() => setShowOnboarding(false)} />
       <div className="max-w-3xl mx-auto p-6 md:p-10 space-y-8">
         {/* Aviso: gerações rodando em segundo plano (preview fechado) */}
         {!lastGeneration && jobs.some((j) => j.status === "processing") && (

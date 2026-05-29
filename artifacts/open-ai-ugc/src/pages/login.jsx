@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { FiLoader, FiArrowRight } from "react-icons/fi";
 import { FaRocket } from "react-icons/fa";
+import { triggerOnboarding } from "@/lib/onboarding";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,6 +35,8 @@ export default function LoginPage() {
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || "Falha ao cadastrar");
         }
+        // primeira vez: abre o wizard de configuração inicial na home
+        triggerOnboarding();
       }
 
       // Then sign in (works for both new and existing accounts).
