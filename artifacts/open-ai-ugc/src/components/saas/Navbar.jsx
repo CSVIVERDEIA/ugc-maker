@@ -35,7 +35,7 @@ export function Navbar() {
         />
         <div className="flex flex-col leading-none">
           <span className="font-black text-xl tracking-tighter uppercase text-foreground">
-            Open AI UGC
+            UGC Maker
           </span>
         </div>
       </Link>
