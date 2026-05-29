@@ -568,22 +568,6 @@ export default function Home() {
 
         {/* Passo 4: modo + modelo + gerar */}
         <Section icon={FiVideo} title="4. Modo & geração">
-          {/* Seletor de modo */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
-            {[
-              { id: "talking-b", label: "Avatar falante", desc: "Fala com movimento natural (cena + lip-sync)" },
-            ].map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setPipeline(m.id)}
-                className={`text-left p-3 rounded-lg border transition-all ${pipeline === m.id ? "border-primary-500 bg-primary-500/5" : "border-glass-border hover:border-primary-500/40"}`}
-              >
-                <p className="text-[11px] font-black text-foreground">{m.label}</p>
-                <p className="text-[10px] text-muted mt-0.5">{m.desc}</p>
-              </button>
-            ))}
-          </div>
-
           {/* Voz — gera e ouve antes do vídeo (só nos modos falantes) */}
           {isTalking && (
             !voicesConfigured ? (
