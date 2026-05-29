@@ -39,10 +39,71 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  password      String?
   credits       Int       @default(10)
   accounts      Account[]
   sessions      Session[]
   creations     Creation[]
+  products      Product[]
+  avatars       Avatar[]
+  campaigns     Campaign[]
+  secrets       Secret[]
+}
+
+model Secret {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String   // REPLICATE_API_TOKEN | ANTHROPIC_API_KEY | ELEVENLABS_API_KEY | WEBHOOK_URL
+  value     String   @db.Text // criptografado (AES-256-GCM)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  objective   String?  // venda, awareness, lançamento, etc
+  angle       String?  @db.Text
+  audience    String?  @db.Text
+  cta         String?
+  productId   String?  // produto vinculado (opcional)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Avatar {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?  @db.Text
+  photos      String[]
+  // { voice, gender, age, style, defaultModel, ... }
+  settings    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?  @db.Text
+  // Estrutura preenchida pelo onboarding com IA:
+  // { benefits: [], audience, price, differentials: [], tone, ... }
+  info        Json?
+  photos      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Creation {
@@ -65,6 +126,15 @@ model Creation {
   duration     Int?
   mode         String?
   inputImages  String[]
+
+  // Pipeline de geração: "video" | "talking-a" | "talking-b"
+  pipeline     String?
+  // Etapa atual (usado no Caminho B): "scene" | "lipsync"
+  stage        String?
+  // Áudio TTS (data URI) guardado pra encadear o lip-sync no Caminho B
+  audio        String?  @db.Text
+  // URL da cena intermediária (Caminho B) antes do lip-sync
+  sceneUrl     String?  @db.Text
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

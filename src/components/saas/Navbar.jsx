@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { FaCoins, FaUser, FaSignOutAlt, FaChevronDown, FaRocket, FaBars, FaTimes } from "react-icons/fa";
+import { FaUser, FaSignOutAlt, FaChevronDown, FaRocket, FaBars, FaTimes } from "react-icons/fa";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LoginButton } from "./AuthButtons";
@@ -15,9 +15,12 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { name: "UGC Generator", href: "/" },
-    { name: "My Creations", href: "/dashboard" },
-    { name: "Pricing", href: "/pricing" },
+    { name: "Gerador", href: "/" },
+    { name: "Produtos", href: "/products" },
+    { name: "Avatares", href: "/avatars" },
+    { name: "Campanhas", href: "/campaigns" },
+    { name: "Minhas Criações", href: "/dashboard" },
+    { name: "Configurações", href: "/settings" },
   ];
 
   return (
@@ -38,7 +41,7 @@ export function Navbar() {
       <div className="hidden md:flex items-center gap-8">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
-          if (!session && (link.href === "/dashboard" || link.href === "/editor")) return null;
+          if (!session && link.href !== "/") return null;
 
           return (
             <Link
@@ -63,23 +66,22 @@ export function Navbar() {
       <div className="flex items-center gap-4">
         {session ? (
           <>
-            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded bg-glass-bg border border-glass-border shadow-sm">
-              <FaCoins className="text-yellow-600 text-xs" />
-              <div className="flex flex-col items-start leading-none">
-                <span className="text-[10px] font-medium text-muted uppercase">Credits</span>
-                <span className="text-xs font-semibold text-foreground">{session.user.credits || 10}</span>
-              </div>
-            </div>
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-3 p-1 rounded hover:bg-glass-bg transition-all outline-none"
               >
-                <img
-                  src={session.user.image}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded ring-2 ring-white/5 shadow-lg"
-                />
+                {session.user.image ? (
+                  <img
+                    src={session.user.image}
+                    alt="Avatar"
+                    className="w-8 h-8 rounded ring-2 ring-white/5 shadow-lg"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded ring-2 ring-white/5 shadow-lg bg-primary-500 flex items-center justify-center text-white text-xs font-bold uppercase">
+                    {(session.user.name || session.user.email || "U").charAt(0)}
+                  </div>
+                )}
               </button>
 
               <AnimatePresence>
@@ -146,14 +148,6 @@ export function Navbar() {
                   {link.name}
                 </Link>
               ))}
-              {session && (
-                <div className="pt-6 border-t border-glass-border flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FaCoins className="text-yellow-600" />
-                    <span className="text-sm font-bold text-foreground">{session.user.credits || 10} Credits</span>
-                  </div>
-                </div>
-              )}
             </div>
           </motion.div>
         )}

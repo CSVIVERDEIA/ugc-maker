@@ -3,12 +3,13 @@ import { headers } from "next/headers";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
 export async function POST(req) {
+  // Instantiated lazily so the build doesn't fail when Stripe keys are absent.
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
   const body = await req.text();
-  const sig = headers().get("stripe-signature");
+  const sig = (await headers()).get("stripe-signature");
 
   let event;
 

@@ -3,10 +3,12 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export async function POST(req) {
   try {
+    // Instantiated lazily so the build doesn't fail when Stripe keys are absent
+    // (Stripe is optional — only needed if you sell credits).
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {

@@ -11,9 +11,15 @@ export async function GET(req) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    // filtro opcional por tipo: ?type=image|audio|video
+    const type = req.nextUrl.searchParams.get("type");
+
     const creations = await prisma.creation.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: "desc" }
+      where: {
+        userId: session.user.id,
+        ...(type ? { type } : {}),
+      },
+      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json(creations);

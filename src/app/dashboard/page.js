@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   FiPlus, FiVideo, FiImage, FiSettings, FiBarChart2, 
   FiArrowRight, FiClock, FiAlertCircle, FiCheckCircle, 
-  FiDownload, FiMaximize2, FiCalendar, FiX, FiInfo
+  FiDownload, FiMaximize2, FiCalendar, FiX, FiInfo, FiMic
 } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -103,7 +103,19 @@ export default function Dashboard() {
                   className="group relative rounded bg-solid-bg border border-glass-border aspect-[3/4] cursor-pointer overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all"
                   onClick={() => setSelectedCreation(item)}
                 >
-                  {item.status === "completed" ? (
+                  {item.status === "completed" && item.type === "audio" ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-glass-hover p-4">
+                      <FiMic className="text-3xl text-primary-400" />
+                      <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Áudio</span>
+                      <audio src={item.url} controls className="w-full h-8" onClick={(e) => e.stopPropagation()} />
+                    </div>
+                  ) : item.status === "completed" && item.type === "image" ? (
+                    <img
+                      src={item.url}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      alt={item.prompt || "Imagem"}
+                    />
+                  ) : item.status === "completed" ? (
                     <video
                       src={item.url}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -164,7 +176,14 @@ export default function Dashboard() {
             >
               {/* Media Side */}
               <div className="flex w-full md:w-[60%] h-[50%] md:h-full bg-glass-bg border-b md:border-b-0 md:border-r border-glass-border items-center justify-center">
-                {selectedCreation.status === "completed" ? (
+                {selectedCreation.status === "completed" && selectedCreation.type === "audio" ? (
+                  <div className="flex flex-col items-center justify-center gap-6 p-8">
+                    <FiMic className="text-6xl text-primary-300" />
+                    <audio src={selectedCreation.url} controls autoPlay className="w-full max-w-sm" />
+                  </div>
+                ) : selectedCreation.status === "completed" && selectedCreation.type === "image" ? (
+                  <img src={selectedCreation.url} className="h-full w-full object-contain" alt={selectedCreation.prompt || "Imagem"} />
+                ) : selectedCreation.status === "completed" ? (
                   <video
                     src={selectedCreation.url}
                     className="h-full w-full object-contain"
