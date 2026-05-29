@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Open AI UGC"
+version = "1.0.0"
+id = "artifacts/open-ai-ugc"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23674
+
+[services.development]
+run = "pnpm --filter @workspace/open-ai-ugc run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/open-ai-ugc", "run", "build" ]
+publicDir = "artifacts/open-ai-ugc/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23674"
+BASE_PATH = "/"

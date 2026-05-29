@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -26,8 +27,15 @@ app.use(
   }),
 );
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// Stripe webhook needs the raw body for signature verification — must run
+// before express.json() so the body isn't parsed into an object.
+app.use("/api/webhook/stripe", express.raw({ type: "*/*" }));
+
+// Large limit: image/audio uploads travel as base64 data URIs.
+app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
 app.use("/api", router);
 
