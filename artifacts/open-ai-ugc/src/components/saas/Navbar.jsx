@@ -41,7 +41,7 @@ export function Navbar() {
       </Link>
 
       {/* Navigation Links */}
-      <div className="hidden md:flex items-center gap-8">
+      <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
           if (!session && link.href !== "/") return null;
