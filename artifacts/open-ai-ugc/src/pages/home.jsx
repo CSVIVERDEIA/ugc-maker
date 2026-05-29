@@ -64,6 +64,74 @@ const MODELS = [
   },
 ];
 
+// Grupos de escolhas guiadas para a foto do produto. Cada opção vira parte de um
+// prompt profissional montado no backend — o usuário não precisa saber escrever prompt.
+const SCENE_GUIDE = [
+  {
+    key: "shot",
+    label: "Enquadramento",
+    options: [
+      "Close no produto",
+      "Produto nas mãos",
+      "Plano médio (pessoa + produto)",
+      "Corpo inteiro",
+      "Flat lay (de cima)",
+    ],
+  },
+  {
+    key: "setting",
+    label: "Cenário",
+    options: [
+      "Estúdio clean",
+      "Cozinha",
+      "Banheiro",
+      "Mesa de madeira",
+      "Café aconchegante",
+      "Ambiente externo",
+      "Academia",
+      "Praia",
+    ],
+  },
+  {
+    key: "lighting",
+    label: "Iluminação",
+    options: [
+      "Luz natural suave",
+      "Luz de estúdio",
+      "Golden hour",
+      "Clean e iluminada",
+      "Dramática com contraste",
+    ],
+  },
+  {
+    key: "background",
+    label: "Fundo",
+    options: [
+      "Neutro desfocado",
+      "Cor sólida",
+      "Cena real do ambiente",
+      "Texturizado",
+    ],
+  },
+  {
+    key: "mood",
+    label: "Estilo / clima",
+    options: [
+      "Minimalista",
+      "Premium / luxo",
+      "Aconchegante",
+      "Divertido e colorido",
+      "Natural / orgânico",
+      "Moderno / tech",
+    ],
+  },
+  {
+    key: "angle",
+    label: "Ângulo",
+    options: ["Frontal", "45 graus", "De cima", "Close detalhe"],
+  },
+];
+
 function buildContext({ product, avatar, campaign }) {
   let ctx = "";
   if (product) {
@@ -152,6 +220,7 @@ export default function Home() {
 
   // composição da imagem (avatar + produto via nano-banana)
   const [scenePrompt, setScenePrompt] = useState("");
+  const [sceneStyle, setSceneStyle] = useState({}); // escolhas guiadas (boas práticas de prompt)
   const [composeImage, setComposeImage] = useState(null);
   const [composeLoading, setComposeLoading] = useState(false);
   const [composeError, setComposeError] = useState("");
@@ -307,7 +376,7 @@ export default function Home() {
         body: JSON.stringify({
           avatarId,
           productId,
-          prompt: scenePrompt,
+          scene: { ...sceneStyle, details: scenePrompt?.trim() || undefined },
           aspectRatio: modelSettings.aspect_ratio || "9:16",
         }),
       });
@@ -532,15 +601,63 @@ export default function Home() {
 
         {/* Passo 2: imagem do produto (composição via nano-banana) */}
         <Section icon={FiImage} title="2. Imagem com o produto">
-          <p className="text-[11px] text-muted mb-3">
-            Gera uma foto do avatar usando/segurando o produto. Essa imagem vira a base do vídeo.
+          <p className="text-[11px] text-muted mb-4">
+            Gera uma foto do avatar usando/segurando o produto. Escolha as opções abaixo e a IA monta
+            uma imagem profissional pra você — sem precisar escrever prompt.
           </p>
-          <input
-            value={scenePrompt}
-            onChange={(e) => setScenePrompt(e.target.value)}
-            placeholder="Direção opcional da cena (ex: na cozinha, segurando perto do rosto, sorrindo)"
-            className="w-full px-3 py-2 bg-glass-bg border border-glass-border rounded-lg text-xs text-foreground placeholder-muted outline-none focus:border-primary-500/50 mb-3"
-          />
+
+          <div className="space-y-4 mb-4">
+            {SCENE_GUIDE.map((group) => (
+              <div key={group.key}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted">
+                    {group.label}
+                  </span>
+                  {sceneStyle[group.key] && (
+                    <button
+                      onClick={() => setSceneStyle((p) => ({ ...p, [group.key]: undefined }))}
+                      className="text-[10px] font-bold text-muted hover:text-foreground transition-colors"
+                    >
+                      limpar
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {group.options.map((opt) => {
+                    const active = sceneStyle[group.key] === opt;
+                    return (
+                      <button
+                        key={opt}
+                        onClick={() =>
+                          setSceneStyle((p) => ({ ...p, [group.key]: active ? undefined : opt }))
+                        }
+                        className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
+                          active
+                            ? "bg-primary-500 text-white border-primary-500 shadow-sm"
+                            : "bg-glass-bg text-foreground border-glass-border hover:border-primary-500/40"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mb-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted block mb-2">
+              Detalhes extras <span className="text-muted/70">(opcional)</span>
+            </span>
+            <input
+              value={scenePrompt}
+              onChange={(e) => setScenePrompt(e.target.value)}
+              placeholder="Ex: sorrindo, segurando perto do rosto, com plantas ao fundo..."
+              className="w-full px-3 py-2 bg-glass-bg border border-glass-border rounded-lg text-xs text-foreground placeholder-muted outline-none focus:border-primary-500/50"
+            />
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={composeImageFn}

@@ -20,10 +20,28 @@ async function toDataUri(url) {
   return `data:${mime};base64,${buf.toString("base64")}`;
 }
 
+// Transforma as escolhas guiadas (rótulos em PT do front) numa direção de cena
+// rica, seguindo boas práticas de prompt para fotografia de produto.
+function buildSceneDirection(scene = {}) {
+  if (!scene || typeof scene !== "object") return "";
+  const { shot, setting, lighting, background, mood, angle, details } = scene;
+  return [
+    shot && `Enquadramento: ${shot}.`,
+    angle && `Ângulo da câmera: ${angle}.`,
+    setting && `Ambiente/cenário: ${setting}.`,
+    background && `Fundo: ${background}.`,
+    lighting && `Iluminação: ${lighting}.`,
+    mood && `Estilo e clima: ${mood}.`,
+    details && `Detalhes adicionais: ${details}.`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 router.post("/", async (req, res) => {
   try {
     const userId = req.session.user.id;
-    const { avatarId, productId, prompt, aspectRatio } = req.body || {};
+    const { avatarId, productId, prompt, scene, aspectRatio } = req.body || {};
 
     const [avatar, product] = await Promise.all([
       avatarId ? prisma.avatar.findUnique({ where: { id: avatarId } }) : null,
@@ -42,16 +60,26 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Selecione um avatar e/ou produto com fotos" });
     }
 
-    const scene = prompt?.trim();
+    // direção da cena: novo formato guiado (scene) ou texto livre legado (prompt)
+    const sceneObj =
+      scene && typeof scene === "object"
+        ? scene
+        : prompt?.trim()
+        ? { details: prompt.trim() }
+        : {};
+    const direction = buildSceneDirection(sceneObj);
+
     const fullPrompt = [
       avatar && product
         ? "A pessoa da primeira imagem segurando e usando naturalmente o produto das outras imagens."
         : product
         ? "Uma pessoa real usando/segurando o produto das imagens de forma natural."
         : "A pessoa da imagem em uma cena natural.",
-      "Foto realista estilo UGC (user-generated content), boa iluminação, ambiente autêntico, mantenha o rosto e o produto fiéis às referências.",
-      scene ? `Cena: ${scene}` : "",
-    ].filter(Boolean).join(" ");
+      direction,
+      "Fotografia de produto com qualidade profissional: foco nítido no produto, composição equilibrada, cores fiéis e bem balanceadas, profundidade de campo agradável, alta resolução e aparência realista e atraente. Mantenha o rosto da pessoa e o produto fiéis às imagens de referência, sem distorcer textos, logos ou formato da embalagem.",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     const keys = await getUserSecrets(userId);
     const prediction = await runPredictionSync({
@@ -78,7 +106,7 @@ router.post("/", async (req, res) => {
         userId,
         type: "image",
         title: product?.name || avatar?.name || "Imagem",
-        prompt: scene || fullPrompt,
+        prompt: fullPrompt,
         url: image,
         modelId: IMAGE_MODEL,
         status: "completed",
