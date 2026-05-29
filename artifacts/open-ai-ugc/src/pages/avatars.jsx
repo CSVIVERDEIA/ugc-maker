@@ -10,8 +10,12 @@ import {
   FiArrowLeft,
   FiImage,
   FiUser,
+  FiZap,
+  FiUploadCloud,
+  FiChevronRight,
 } from "react-icons/fi";
 import { proxiedSrc } from "@/lib/utils";
+import { AvatarCreator } from "@/components/saas/AvatarCreator";
 
 const EMPTY_FORM = {
   name: "",
@@ -79,6 +83,11 @@ export default function AvatarsPage() {
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
   const openNew = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setView("choose");
+  };
+  const openUpload = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
     setView("edit");
@@ -168,12 +177,75 @@ export default function AvatarsPage() {
     );
   }
 
-  if (view === "edit") {
+  if (view === "creator") {
+    return (
+      <AvatarCreator
+        onCancel={() => setView("list")}
+        onCreated={async () => {
+          await load();
+          setView("list");
+        }}
+      />
+    );
+  }
+
+  if (view === "choose") {
     return (
       <div className="flex-1 overflow-y-auto p-6 md:p-10">
         <div className="max-w-2xl mx-auto">
           <button
             onClick={() => setView("list")}
+            className="flex items-center gap-2 text-xs font-bold text-muted hover:text-foreground mb-6 transition-colors"
+          >
+            <FiArrowLeft /> Voltar
+          </button>
+          <h1 className="text-xl font-black tracking-tight text-foreground mb-1">Novo avatar</h1>
+          <p className="text-xs text-muted mb-8">Como você quer criar seu ator?</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              onClick={() => setView("creator")}
+              className="text-left p-5 rounded-xl border border-glass-border bg-glass-bg hover:border-primary-500/50 transition-all group"
+            >
+              <div className="w-11 h-11 rounded-xl bg-primary-500 flex items-center justify-center mb-4 shadow-lg shadow-primary-500/20">
+                <FiZap className="text-white text-lg" />
+              </div>
+              <h3 className="text-sm font-black text-foreground flex items-center gap-1.5">
+                Criar com IA
+                <FiChevronRight className="text-muted group-hover:translate-x-0.5 transition-transform" />
+              </h3>
+              <p className="text-[11px] text-muted mt-1.5 leading-relaxed">
+                Criação guiada: responda algumas perguntas sobre a aparência e a IA gera o retrato do zero.
+              </p>
+            </button>
+
+            <button
+              onClick={openUpload}
+              className="text-left p-5 rounded-xl border border-glass-border bg-glass-bg hover:border-primary-500/50 transition-all group"
+            >
+              <div className="w-11 h-11 rounded-xl bg-glass-hover border border-glass-border flex items-center justify-center mb-4">
+                <FiUploadCloud className="text-foreground text-lg" />
+              </div>
+              <h3 className="text-sm font-black text-foreground flex items-center gap-1.5">
+                Upload de fotos
+                <FiChevronRight className="text-muted group-hover:translate-x-0.5 transition-transform" />
+              </h3>
+              <p className="text-[11px] text-muted mt-1.5 leading-relaxed">
+                Já tem fotos de um rosto? Envie suas imagens de referência e preencha os detalhes.
+              </p>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "edit") {
+    return (
+      <div className="flex-1 overflow-y-auto p-6 md:p-10">
+        <div className="max-w-2xl mx-auto">
+          <button
+            onClick={() => setView(editingId ? "list" : "choose")}
             className="flex items-center gap-2 text-xs font-bold text-muted hover:text-foreground mb-6 transition-colors"
           >
             <FiArrowLeft /> Voltar
