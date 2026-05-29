@@ -132,6 +132,27 @@ const SCENE_GUIDE = [
   },
 ];
 
+// Sugestões rápidas pra montar o movimento da cena de forma "crua" — depois o
+// usuário pode clicar em "Melhorar com IA" pra virar uma direção cinematográfica.
+const MOTION_GUIDE = [
+  {
+    label: "Câmera",
+    options: ["zoom lento", "zoom out", "câmera parada", "travelling lateral", "câmera na mão", "giro suave"],
+  },
+  {
+    label: "Ação",
+    options: ["gesticulando", "mostrando o produto", "aplicando o produto", "andando", "apontando pra câmera", "segurando perto do rosto"],
+  },
+  {
+    label: "Expressão",
+    options: ["sorrindo", "surpresa", "empolgação", "confiante", "falando animada"],
+  },
+  {
+    label: "Ritmo",
+    options: ["movimento suave", "dinâmico", "energético"],
+  },
+];
+
 function buildContext({ product, avatar, campaign }) {
   let ctx = "";
   if (product) {
@@ -256,6 +277,8 @@ export default function Home() {
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [motionPrompt, setMotionPrompt] = useState("");
+  const [motionEnhancing, setMotionEnhancing] = useState(false);
+  const [motionError, setMotionError] = useState("");
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastGeneration, setLastGeneration] = useState(null); // o que está aberto no preview
@@ -389,6 +412,29 @@ export default function Home() {
       setComposeError(err.message);
     } finally {
       setComposeLoading(false);
+    }
+  };
+
+  const enhanceMotionFn = async () => {
+    if (!motionPrompt.trim()) {
+      setMotionError("Escreva uma ideia do movimento primeiro (pode ser bem cru).");
+      return;
+    }
+    setMotionEnhancing(true);
+    setMotionError("");
+    try {
+      const res = await fetch("/api/scripts/enhance-motion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ raw: motionPrompt }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Falha ao melhorar o movimento");
+      setMotionPrompt(data.motion);
+    } catch (err) {
+      setMotionError(err.message);
+    } finally {
+      setMotionEnhancing(false);
     }
   };
 
@@ -804,12 +850,62 @@ export default function Home() {
               <span className="text-[10px] font-black uppercase tracking-widest text-muted block mb-1.5">
                 Movimento da cena
               </span>
+              <p className="text-[11px] text-muted mb-2.5">
+                Escreva do seu jeito (pode ser bem cru) ou toque nas sugestões — depois clique em
+                <span className="font-bold text-foreground"> Melhorar com IA</span> pra virar uma direção profissional.
+              </p>
+
+              <div className="space-y-2.5 mb-3">
+                {MOTION_GUIDE.map((group) => (
+                  <div key={group.label} className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted w-16 flex-shrink-0">
+                      {group.label}
+                    </span>
+                    {group.options.map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() =>
+                          setMotionPrompt((p) => {
+                            const t = p.trim();
+                            if (t.toLowerCase().includes(opt.toLowerCase())) return p;
+                            return t ? `${t}, ${opt}` : opt;
+                          })
+                        }
+                        className="px-3 py-1 rounded-full text-[11px] font-bold bg-glass-bg text-foreground border border-glass-border hover:border-primary-500/40 transition-all"
+                      >
+                        + {opt}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+
               <textarea
                 value={motionPrompt}
                 onChange={(e) => setMotionPrompt(e.target.value)}
                 placeholder="Ex: gesticulando com as mãos, sorrindo, leve zoom de câmera, andando pela cozinha"
                 className="w-full h-16 px-3 py-2 bg-glass-bg border border-glass-border rounded-lg text-xs text-foreground placeholder-muted outline-none focus:border-primary-500/50 resize-none"
               />
+
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                <button
+                  onClick={enhanceMotionFn}
+                  disabled={motionEnhancing || !motionPrompt.trim()}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-primary-500 text-white rounded-lg text-xs font-bold hover:bg-primary-600 transition-all disabled:opacity-50"
+                >
+                  {motionEnhancing ? <FiLoader className="animate-spin" /> : <FiZap />}
+                  Melhorar com IA
+                </button>
+                {motionPrompt.trim() && (
+                  <button
+                    onClick={() => { setMotionPrompt(""); setMotionError(""); }}
+                    className="px-3 py-1.5 text-xs font-bold text-muted hover:text-foreground transition-colors"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+              {motionError && <p className="text-[11px] text-rose-500 mt-2">{motionError}</p>}
             </div>
           )}
 

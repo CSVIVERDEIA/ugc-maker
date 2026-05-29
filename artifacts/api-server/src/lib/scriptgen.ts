@@ -67,6 +67,26 @@ export async function reshapeScript({ script, currentSeconds, targetSeconds = 15
     .trim();
 }
 
+export async function enhanceMotionPrompt({ raw, keys }) {
+  const text = await callLLM({
+    system:
+      "Você é um diretor de cena especialista em vídeos UGC gerados por IA (modelos texto/imagem-para-vídeo como Kling, Veo e Seedance). " +
+      "Sua tarefa é transformar uma descrição crua de movimento em uma direção de cena clara e cinematográfica, seguindo boas práticas de prompt para geração de vídeo: " +
+      "descreva o movimento de câmera (ex: zoom lento, travelling, câmera na mão), a ação e os gestos da pessoa, a expressão facial, o ritmo/energia e pequenos detalhes do ambiente que dão vida à cena. " +
+      "Mantenha curto e objetivo (1 a 2 frases, no máximo ~40 palavras), natural e realista, sem exageros. " +
+      "NUNCA invente fala/diálogo, marcas ou textos na tela. Responda APENAS com a descrição final do movimento, em português do Brasil, sem aspas, títulos ou comentários.",
+    user: `Descrição crua do movimento da cena:\n${raw}\n\nReescreva como uma direção de cena profissional para o modelo de vídeo.`,
+    maxTokens: 200,
+    keys,
+  });
+
+  return text
+    .replace(/```/g, "")
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .trim();
+}
+
 export async function generateScripts({ context, tone = "autêntico e casual", count = 3, keys }) {
   const text = await callLLM({
     system: SYSTEM_PROMPT,
