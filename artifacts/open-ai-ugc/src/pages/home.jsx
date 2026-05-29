@@ -163,8 +163,8 @@ export default function Home() {
   const [modelSettings, setModelSettings] = useState({});
   const [isModelsModalOpen, setIsModelsModalOpen] = useState(false);
 
-  // pipeline: "video" (normal) | "talking-a" (omni-human) | "talking-b" (cena+lipsync)
-  const [pipeline, setPipeline] = useState("video");
+  // pipeline: "talking-a" (omni-human) | "talking-b" (cena+lipsync)
+  const [pipeline, setPipeline] = useState("talking-b");
   const [voices, setVoices] = useState([]);
   const [voicesConfigured, setVoicesConfigured] = useState(true);
   const [voiceId, setVoiceId] = useState("");
@@ -571,7 +571,6 @@ export default function Home() {
           {/* Seletor de modo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
             {[
-              { id: "video", label: "Vídeo normal", desc: "Anima a imagem (sem fala)" },
               { id: "talking-b", label: "Avatar falante", desc: "Fala com movimento natural (cena + lip-sync)" },
             ].map((m) => (
               <button
@@ -658,36 +657,6 @@ export default function Home() {
                 placeholder="Ex: gesticulando com as mãos, sorrindo, leve zoom de câmera, andando pela cozinha"
                 className="w-full h-16 px-3 py-2 bg-glass-bg border border-glass-border rounded-lg text-xs text-foreground placeholder-muted outline-none focus:border-primary-500/50 resize-none"
               />
-            </div>
-          )}
-
-          {/* Modelo/params: só no modo "Vídeo normal" */}
-          {!isTalking && (
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => setIsModelsModalOpen(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded bg-glass-bg border border-glass-border hover:bg-glass-hover transition-colors"
-              >
-                <selectedModel.icon className="text-xs text-muted" />
-                <span className="text-xs font-medium text-foreground">{selectedModel.name}</span>
-              </button>
-              <div className="w-px h-4 bg-glass-border mx-1" />
-              {selectedModel.params &&
-                Object.keys(selectedModel.params).map((key) => {
-                  const param = selectedModel.params[key];
-                  if (param.options && param.options.length > 1) {
-                    return (
-                      <Dropdown
-                        key={key}
-                        label={key.replace("_", " ")}
-                        value={modelSettings[key]}
-                        options={param.options}
-                        onChange={(v) => updateSetting(key, v)}
-                      />
-                    );
-                  }
-                  return null;
-                })}
             </div>
           )}
 
